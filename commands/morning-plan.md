@@ -15,8 +15,8 @@ Parse arguments:
 - Optional argument: energy level 1-5 (skips the energy check-in question)
 
 Steps:
-1. Query Notion for weekly review priorities, today's tasks, quarterly projects, and ideal week template (from config)
+1. Query connected tools (or ask user if chat-only) for weekly review priorities, today's tasks, quarterly projects, and ideal week template (from config)
 2. Ask energy level (if not provided as argument)
 3. Generate adaptive daily plan with time blocks
 4. Get user confirmation
-5. Save plan page to Notion (Second Brain page from config)
+5. Save plan to notes tool (or present in chat if notes_tool is none)

@@ -1,5 +1,5 @@
 ---
-description: Configure life-os for your Notion workspace, schedule, and preferences
+description: Configure life-os with your preferred tools, schedule, and preferences
 allowed-tools: ["Read", "Write", "Edit", "Bash", "AskUserQuestion", "Glob"]
 ---
 
@@ -16,43 +16,103 @@ Respond in English by default. If the user writes in another language, mirror th
 
 ---
 
-## Phase 1: Notion Connection
+## Phase 1: Tool Selection & Connection
 
-This is the most critical phase. Without valid Notion database IDs, nothing works.
+life-os works with any combination of tools — or no tools at all.
 
-### Step 1: Explain what's needed
+### Step 1: Ask which tools the user wants to connect
+
+> "life-os can work with external tools via MCP, or in chat-only mode where everything happens in our conversation.
+>
+> Let's pick your tools:
+>
+> **A) Task & project database** — where your tasks, projects, and resources live
+> Options: Notion (recommended), Airtable, Linear, other, or none
+>
+> **B) Calendar** — to read today's events and merge with your ideal week
+> Options: Google Calendar, Outlook Calendar, other, or none
+>
+> **C) Email** — to scan unread emails during weekly reviews
+> Options: Gmail, Outlook, or none
+>
+> Which tools do you want to connect? You can always change this later by running `/setup` again."
+
+Store the choices as:
+- `task_tool`: "notion" | "airtable" | "linear" | "other" | "none"
+- `calendar_tool`: "gcal" | "outlook" | "other" | "none"
+- `email_tool`: "gmail" | "outlook" | "other" | "none"
+
+### Step 2: Notes output
+
+If `task_tool` is "notion" or another tool that supports page creation:
+> "Should life-os save daily plans and weekly reviews to your [tool]? (recommended)"
+If yes: `notes_tool` = same as `task_tool`
+If no: `notes_tool` = "none"
+
+If `task_tool` is "none":
+`notes_tool` = "none"
+
+> If `notes_tool` = "none": "Chat-only output mode. I'll present all plans and reviews directly in our conversation as formatted messages."
+
+### Step 3: Connect and validate each selected tool
+
+**If `task_tool != "none"`:**
 
 Tell the user:
-> "life-os needs access to your Notion databases. You'll need 3-4 database URLs from Notion. Here's what each one is for:
+> "Make sure the MCP server for [tool name] is connected to Claude Code.
 >
+> I need access to these databases:
 > 1. **Tasks database** (required) — where your to-do items live
 > 2. **Projects database** (required) — where your projects/goals are tracked
 > 3. **Resources database** (required) — your reference materials, bookmarks, notes
-> 4. **Second Brain page** (required) — a parent page where life-os will save weekly reviews and daily plans
+> 4. **Output page** (required) — a parent page where life-os will save weekly reviews and daily plans
 > 5. **Planning board** (optional) — if you use a weekly kanban/board view for task scheduling
 > 6. **Goals/planning page** (optional) — a page with your quarterly or yearly goals
 >
-> To get a database URL: open it in Notion, click Share, and copy the link."
+> Share the URL or ID for each one."
 
-### Step 2: Collect database URLs
+Ask for each one, one at a time. For each URL/ID provided:
 
-Ask for each one, one at a time. For each URL provided:
-
-1. Use the Notion MCP `fetch` tool to validate it exists and is accessible
-2. Extract the data source ID from the `<data-source>` tag in the response
-3. Read the schema to identify available properties
-
-If a fetch fails, tell the user and ask them to check the URL and Notion MCP permissions.
+1. Use the appropriate MCP tool to validate it exists and is accessible:
+   - Notion: use `fetch` tool, extract data source ID from `<data-source>` tag
+   - Airtable/Linear/other: use the tool's equivalent list/read operation
+2. Read the schema to identify available properties
+3. If validation fails, tell the user and ask them to check the URL and MCP connection
 
 Store the validated IDs as:
-- `tasks_db` — the data source collection:// URL
-- `projects_db` — the data source collection:// URL
-- `resources_db` — the data source collection:// URL
-- `second_brain_url` — the page URL
-- `planning_board_db` — the data source collection:// URL (or empty)
+- `tasks_db` — the tool-specific database identifier
+- `projects_db` — the tool-specific database identifier
+- `resources_db` — the tool-specific database identifier
+- `output_page_url` — the page/container URL where output is saved
+- `planning_board_db` — the tool-specific identifier (or empty)
 - `goals_page_url` — the page URL (or empty)
 
-### Step 3: Field mapping
+**If `calendar_tool != "none"`:**
+
+> "Let me verify the calendar connection."
+
+Try a basic operation (e.g., list today's events) to confirm the MCP is working.
+
+> "Which calendar should I read? (default: primary)"
+
+Store as `calendar_id` (default: "primary").
+
+**If `email_tool != "none"`:**
+
+> "Let me verify the email connection."
+
+Try a basic operation (e.g., get profile) to confirm the MCP is working.
+
+**If ALL tools are "none":**
+
+> "You're set up in chat-only mode! Here's how it works:
+> - For morning plans, I'll ask you about your tasks and energy, then present a plan
+> - For weekly reviews, I'll walk you through each GTD phase conversationally
+> - For evening closes, we'll review the day together
+>
+> Everything stays in our conversation. No external tools needed."
+
+### Step 4: Field mapping (only if `task_tool != "none"`)
 
 For the Tasks database, look for these fields in the schema and map them:
 
@@ -186,13 +246,22 @@ Using all collected data, generate `.claude/life-os.local.md` with this structur
 
 ```markdown
 ---
-# === Notion Databases ===
-tasks_db: "[collected value]"
-projects_db: "[collected value]"
-resources_db: "[collected value]"
-second_brain_url: "[collected value]"
-planning_board_db: "[collected value or empty]"
-goals_page_url: "[collected value or empty]"
+# === Connected Tools ===
+task_tool: "[none | notion | airtable | linear | other]"
+calendar_tool: "[none | gcal | outlook | other]"
+notes_tool: "[none | notion | airtable | other]"
+email_tool: "[none | gmail | outlook | other]"
+
+# === Tool Connections (only present if task_tool != "none") ===
+tasks_db: "[tool-specific identifier]"
+projects_db: "[tool-specific identifier]"
+resources_db: "[tool-specific identifier]"
+output_page_url: "[page/container URL for saving output]"
+planning_board_db: "[tool-specific identifier or empty]"
+goals_page_url: "[page URL or empty]"
+
+# === Calendar (only present if calendar_tool != "none") ===
+calendar_id: "[calendar identifier, default: primary]"
 
 # === Language ===
 language: "[collected value]"
@@ -211,7 +280,7 @@ personal_project_window: "[collected value or empty]"
 sprint_cycle_enabled: [true/false]
 sprint_week_a_parity: "[even/odd or empty]"
 
-# === Notion Field Mapping — Tasks ===
+# === Field Mapping — Tasks (only present if task_tool != "none") ===
 task_status_field: "[collected value]"
 task_status_not_started: "[collected value]"
 task_status_in_progress: "[collected value]"
@@ -222,14 +291,14 @@ task_next_action_field: "[collected value]"
 task_due_date_field: "[collected value]"
 task_project_field: "[collected value]"
 
-# === Notion Field Mapping — Projects ===
+# === Field Mapping — Projects (only present if task_tool != "none") ===
 project_status_field: "[collected value]"
 project_status_values: "[comma-separated list]"
 project_quarter_field: "[collected value]"
 project_legacy_field: "[collected value]"
 project_sprint_field: "[collected value]"
 
-# === Notion Field Mapping — Resources ===
+# === Field Mapping — Resources (only present if task_tool != "none") ===
 resource_status_field: "[collected value]"
 resource_project_field: "[collected value]"
 ---
@@ -321,6 +390,8 @@ When generating the ideal week, ALWAYS apply these break rules:
 
 Tell the user:
 > "Setup complete! Your config is saved at `.claude/life-os.local.md`.
+>
+> **Mode:** [Full integration / Partial / Chat-only] with [list connected tools or "no external tools"]
 >
 > Remember to add `.claude/*.local.md` to your `.gitignore` to keep your personal data out of version control.
 >

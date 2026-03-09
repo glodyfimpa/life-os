@@ -1,7 +1,7 @@
 ---
 name: time-energy-manager
 description: |
-  Daily time and energy management system with 4 phases: Morning Plan, Mid-day Check, Pivot, Evening Close. Complements the planning-review-system by translating weekly priorities into daily execution with energy-adaptive scheduling. Use this skill when: starting the day, checking energy levels, handling schedule changes, or closing the day. Triggers are defined in the user's config file (.claude/life-os.local.md). Requires Notion MCP connected.
+  Daily time and energy management system with 4 phases: Morning Plan, Mid-day Check, Pivot, Evening Close. Complements the planning-review-system by translating weekly priorities into daily execution with energy-adaptive scheduling. Use this skill when: starting the day, checking energy levels, handling schedule changes, or closing the day. Triggers are defined in the user's config file (.claude/life-os.local.md). Works with any task database and calendar MCP, or in chat-only mode without any tools.
 ---
 
 # Time & Energy Manager
@@ -13,12 +13,14 @@ Daily time and energy management system in 4 phases. Operational complement to t
 ## Config Guard
 
 **BEFORE ANYTHING ELSE:** Check if `.claude/life-os.local.md` exists in the current project directory. If not, tell the user:
-> "life-os is not configured yet. Run `/setup` first to connect your Notion databases and set your preferences."
+> "life-os is not configured yet. Run `/setup` first to connect your tools and set your preferences."
 Stop execution.
 
 If it exists, read the file and parse:
-- **Frontmatter (YAML):** database IDs, field mappings, language, schedule settings
+- **Frontmatter (YAML):** connected tools, database IDs, field mappings, language, schedule settings
 - **Body (Markdown):** triggers, fixed commitments, recurring meetings, ideal week
+
+Read `task_tool`, `calendar_tool`, and `notes_tool` from config. These determine whether to use MCP tools or conversational fallbacks.
 
 All instructions below reference config values. Never use hardcoded database IDs, field names, or schedule times.
 
@@ -28,14 +30,18 @@ Respond in the language specified by the `language` field in the config. Format 
 
 ## Database References
 
-Read all database IDs from config frontmatter:
+If `task_tool != none`, read all database IDs from config frontmatter:
 
 - **Tasks:** value of `tasks_db`
 - **Projects:** value of `projects_db`
 - **Planning board:** value of `planning_board_db` (may be empty)
-- **Second Brain:** value of `second_brain_url`
+- **Output page:** value of `output_page_url`
+
+If `task_tool = none`, skip — data will be collected from the user directly.
 
 ## Critical Filters
+
+Skip if `task_tool = none`.
 
 | Database | Filter | Reason |
 |----------|--------|--------|
@@ -49,12 +55,25 @@ Read all database IDs from config frontmatter:
 
 ### Step 1: Read context (automatic)
 
-Query Notion in parallel:
+Gather the following context. For each item, use the connected tool or fall back to asking the user.
 
-1. **Latest Weekly Review:** Search in Second Brain for the most recent page with title starting "Weekly Review —". Extract: weekly priorities, metric, why.
-2. **Today's tasks:** From Tasks database, filter `[task_status_field] != [task_status_done]` AND (`[task_due_date_field] = today` OR `[task_due_date_field]` is overdue). If planning board is configured, also query it for today's day.
-3. **Quarter projects:** From Projects database, filter `[project_quarter_field] = Q[current quarter]` AND `[project_status_field] = In progress` AND `[project_legacy_field] = false`.
+1. **Latest Weekly Review:**
+   - If `notes_tool != none`: Search in output page for the most recent page with title starting "Weekly Review —". Extract: weekly priorities, metric, why.
+   - If `notes_tool = none`: Ask the user: "What was your main priority from your last weekly review?"
+
+2. **Today's tasks:**
+   - If `task_tool != none`: From Tasks database, filter `[task_status_field] != [task_status_done]` AND (`[task_due_date_field] = today` OR `[task_due_date_field]` is overdue). If planning board is configured, also query it for today's day.
+   - If `task_tool = none`: Ask the user: "What tasks do you have for today? Include anything overdue."
+
+3. **Quarter projects:**
+   - If `task_tool != none`: From Projects database, filter `[project_quarter_field] = Q[current quarter]` AND `[project_status_field] = In progress` AND `[project_legacy_field] = false`.
+   - If `task_tool = none`: Ask the user: "What are your main projects this quarter?"
+
 4. **Ideal Week:** Read the "Ideal Week" section from config body for today's day name. If sprint cycle is enabled, determine if it's Sprint Week A or B using the configured parity.
+
+5. **Calendar events:**
+   - If `calendar_tool != none`: Read today's calendar events using the calendar MCP (use `calendar_id` from config). Merge calendar events with the ideal week template: calendar events take priority over template blocks when they overlap. Show both scheduled meetings from calendar and planned deep work from ideal week.
+   - If `calendar_tool = none`: Use only the ideal week template from config.
 
 ### Step 2: Energy check-in (30 sec)
 
@@ -66,7 +85,7 @@ If the user wants to add context (optional):
 
 ### Step 3: Generate adaptive plan
 
-Based on: weekly priorities + today's tasks + energy + ideal week template for today.
+Based on: weekly priorities + today's tasks + energy + ideal week template for today (merged with calendar events if available).
 
 **Energy logic:**
 
@@ -76,7 +95,7 @@ Based on: weekly priorities + today's tasks + energy + ideal week template for t
 | 3 | Important but non-creative tasks. Alternate focus and breaks. First block for study/review. |
 | 1-2 | Essential tasks and deadlines only. Protect energy. First focus block optional. Suggest extra breaks. |
 
-**Block structure:** Use today's template from the "Ideal Week" section in config. Adapt based on energy level. Use these icons:
+**Block structure:** Use today's template from the "Ideal Week" section in config, merged with calendar events when available. Adapt based on energy level. Use these icons:
 
 - Deep focus: relevant icon
 - Light work: relevant icon
@@ -97,35 +116,38 @@ Present the plan and ask:
 
 If the user modifies, adapt. If confirmed, proceed.
 
-### Step 5: Save to Notion
+### Step 5: Save plan
 
-Create a page under Second Brain with:
-- **Title:** `Plan [date in configured language]`
-- **Content:** the complete plan with blocks, energy, weekly priorities
+- If `notes_tool != none`: Create a page under the output page (from config `output_page_url`) with:
 
-Page structure:
+  - **Title:** `Plan [date in configured language]`
+  - **Content:** the complete plan with blocks, energy, weekly priorities
 
-```markdown
-## Plan [date]
+  Page structure:
 
-**Morning energy:** [N]/5
-**Context:** [optional note or "—"]
-**Weekly priority:** [from weekly review]
-**Week type:** [Sprint A / Sprint B / Standard]
+  ```markdown
+  ## Plan [date]
 
-### Today's Blocks
-[block list from generated plan]
+  **Morning energy:** [N]/5
+  **Context:** [optional note or "—"]
+  **Weekly priority:** [from weekly review]
+  **Week type:** [Sprint A / Sprint B / Standard]
 
-**Daily goal:** If you do [X], [Y], [Z] — tonight you can disconnect.
+  ### Today's Blocks
+  [block list from generated plan]
 
----
-### Afternoon Check-in
-[completed by Phase 2]
+  **Daily goal:** If you do [X], [Y], [Z] — tonight you can disconnect.
 
----
-### Evening Close
-[completed by Phase 4]
-```
+  ---
+  ### Afternoon Check-in
+  [completed by Phase 2]
+
+  ---
+  ### Evening Close
+  [completed by Phase 4]
+  ```
+
+- If `notes_tool = none`: Present the complete plan in chat as formatted markdown. Tell the user: "Here's your daily plan. You can copy it wherever you'd like."
 
 ## Phase 2 — Mid-day Check (1 min)
 
@@ -137,7 +159,10 @@ Page structure:
 
 ### Step 2: Compare with morning
 
-Read today's Plan page from Notion (search in Second Brain for "Plan [today's date]").
+- If `notes_tool != none`: Read today's Plan page (search for "Plan [today's date]").
+- If `notes_tool = none`: Ask the user: "What was your morning energy level, and what were your 3 priorities?"
+
+Then compare:
 
 - If drop > 2 points from morning: "Significant drop. I suggest lightening the afternoon."
 - If stable or rising: "Energy is stable, keep going."
@@ -162,14 +187,16 @@ Read "Fixed Commitments" from config body. Check if today has a commitment that 
 If today IS blocked by a commitment:
 > "You have [commitment name] after work today. Plan is to wrap up and head there."
 
-### Step 5: Update Notion
+### Step 5: Save check-in
 
-Update today's Plan page, "Afternoon Check-in" section:
+- If `notes_tool != none`: Update today's Plan page, "Afternoon Check-in" section:
 
-```markdown
-### Afternoon Check-in
-**Energy:** [N]/5 | Completed: [list] | Remaining: [list] → [action]
-```
+  ```markdown
+  ### Afternoon Check-in
+  **Energy:** [N]/5 | Completed: [list] | Remaining: [list] → [action]
+  ```
+
+- If `notes_tool = none`: Present the check-in summary in chat as formatted markdown. Tell the user: "Here's your check-in summary. You can copy it wherever you'd like."
 
 ## Phase 3 — Pivot (2 min)
 
@@ -181,7 +208,10 @@ Update today's Plan page, "Afternoon Check-in" section:
 
 ### Step 2: Honest evaluation
 
-Read today's Plan page and weekly priorities from the weekly review. Compare:
+- If `notes_tool != none`: Read today's Plan page and weekly priorities from the weekly review.
+- If `notes_tool = none`: Ask the user what their current plan and weekly priority are.
+
+Compare:
 
 > "The weekly priority is [X]. Is this new thing more important? Let's see."
 
@@ -201,10 +231,14 @@ Read today's Plan page and weekly priorities from the weekly review. Compare:
 
 > "Do you want to proceed with the switch or keep the original plan?"
 
-### Step 4: Update Notion
+### Step 4: Save pivot
 
-If the user changes the plan, update the daily page with the new blocks. Add note:
-> "Pivot at [time]: [reason]. Removed [X], added [Y]."
+If the user changes the plan:
+
+- If `notes_tool != none`: Update the daily page with the new blocks. Add note:
+  > "Pivot at [time]: [reason]. Removed [X], added [Y]."
+
+- If `notes_tool = none`: Present the updated plan in chat as formatted markdown, including the pivot note.
 
 ## Phase 4 — Evening Close (2 min)
 
@@ -212,13 +246,14 @@ If the user changes the plan, update the daily page with the new blocks. Add not
 
 ### Step 1: Read the plan
 
-Retrieve today's Plan page from Notion. Read the 3 priorities and planned blocks.
+- If `notes_tool != none`: Retrieve today's Plan page. Read the 3 priorities and planned blocks.
+- If `notes_tool = none`: Ask the user: "What were your 3 priorities this morning?"
 
 ### Step 2: What did you complete?
 
 > "What did you complete today?"
 
-Or, if the Notion tasks are updated, deduce it from status changes.
+Or, if the task database is connected and tasks are updated, deduce it from status changes.
 
 ### Step 3: Final energy rating
 
@@ -243,18 +278,20 @@ Compare planned priorities vs completed:
 
 If yes, note it. If no, skip.
 
-### Step 6: Update Notion
+### Step 6: Save evening close
 
-Update today's Plan page, "Evening Close" section:
+- If `notes_tool != none`: Update today's Plan page, "Evening Close" section:
 
-```markdown
-### Evening Close
-**Evening energy:** [N]/5
-**Completed:** [list]
-**Not completed:** [list + brief reason]
-**Verdict:** [message from the verdict]
-**Note for tomorrow:** [text or "—"]
-```
+  ```markdown
+  ### Evening Close
+  **Evening energy:** [N]/5
+  **Completed:** [list]
+  **Not completed:** [list + brief reason]
+  **Verdict:** [message from the verdict]
+  **Note for tomorrow:** [text or "—"]
+  ```
+
+- If `notes_tool = none`: Present the evening close summary in chat as formatted markdown. Tell the user: "Here's your evening close. You can copy it wherever you'd like."
 
 ## Trigger Mapping
 
@@ -262,7 +299,7 @@ Read triggers from the "Trigger Mapping" section in config body. Match user mess
 
 | Time | Default |
 |------|---------|
-| Before 2 hours into the workday (and no Plan exists today in Notion) | Suggest Phase 1 |
+| Before 2 hours into the workday (and no Plan exists today — check notes tool or conversation history) | Suggest Phase 1 |
 | Middle of the workday | Suggest Phase 2 |
 | Last hour of workday or after | Suggest Phase 4 |
 | Urgency words at any time | Phase 3 always |
@@ -280,7 +317,8 @@ Read triggers from the "Trigger Mapping" section in config body. Match user mess
 
 | Service | Required | Purpose |
 |---------|----------|---------|
-| Notion MCP | Yes | All database operations + page creation |
+| Task database MCP | Recommended | Notion, Airtable, Linear, or similar. Enables automatic task/project queries. Without it, the user provides information conversationally. |
+| Calendar MCP | No | Google Calendar, Outlook, or similar. Enhances Morning Plan with real calendar events. Without it, uses ideal week template only. |
 | planning-review-system | No (but recommended) | Morning Plan reads weekly review. Without PRS, that context is skipped. |
 
 ## Principles (ALWAYS apply)

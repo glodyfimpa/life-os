@@ -10,13 +10,15 @@ workflows in terms of categories rather than specific products.
 
 | Category | Placeholder | Options |
 |----------|-------------|---------|
-| Task & project database | `~~task database` | Notion (recommended), Airtable, Linear |
-| Email | `~~email` | Gmail, Outlook |
+| Task & project database | `~~task database` | Notion (recommended), Airtable, Linear, or none |
+| Calendar | `~~calendar` | Google Calendar (recommended), Outlook Calendar, or none |
+| Email | `~~email` | Gmail, Outlook, or none |
 
-Both skills reference Notion collection IDs stored in the user's config file
-(`.claude/life-os.local.md`), which is generated during `/setup`.
-If using a different task database, replace the collection:// URLs with the
-equivalent data source identifiers.
+All connectors are optional. life-os works in three modes:
 
-Gmail is optional: planning-review-system uses it in Phase 1 (Quick Capture)
-to scan unread/starred emails. If not connected, that step is skipped.
+- **Full integration:** All tools connected. Reads and writes data automatically.
+- **Partial:** Some tools connected. Connected tools work normally; missing tools use conversational fallbacks.
+- **Chat-only:** No tools connected. All input comes from the user, all output appears in chat.
+
+Tool connections are configured during `/setup` and stored in the user's
+config file (`.claude/life-os.local.md`).

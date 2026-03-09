@@ -11,9 +11,9 @@ Stop.
 Load the time-energy-manager skill from this plugin. Execute the Evening Close workflow.
 
 Steps:
-1. Read today's plan from Notion (search Second Brain for today's date)
+1. Read today's plan from notes tool (or ask user what today's priorities were)
 2. Ask what was completed
 3. Get final energy rating
 4. Deliver the verdict (always oriented toward permission to disconnect)
 5. Capture note for tomorrow (optional)
-6. Update Notion page with Evening Close section
+6. Save evening close to notes tool (or present in chat)
