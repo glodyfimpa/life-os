@@ -1,0 +1,6 @@
+{
+  "name": "life-os",
+  "version": "0.2.0",
+  "description": "Personal productivity system: GTD weekly reviews, energy-adaptive daily planning, and quarterly goal tracking. Run /setup to connect your tools and configure your schedule.",
+  "keywords": ["productivity", "gtd", "weekly-review", "energy-management", "time-management", "planning", "tool-agnostic"]
+}
