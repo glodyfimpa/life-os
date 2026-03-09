@@ -1,0 +1,31 @@
+# User-local plugin config (contains personal Notion IDs, schedule, etc.)
+.claude/*.local.md
+.claude/*.local.json
+
+# Claude Code session files
+.claude/plans/
+.claude/memory/
+.claude/worktrees/
+.claude/todos/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+._*
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+npm-debug.log*
+
+# Node (in case of future tooling)
+node_modules/
