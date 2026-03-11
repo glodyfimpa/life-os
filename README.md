@@ -1,6 +1,14 @@
-# life-os
+```
+ _ _  __                      
+| (_)/ _| ___        ___  ___ 
+| | | |_ / _ \_____ / _ \/ __|
+| | |  _|  __/_____| (_) \__ \
+|_|_|_|  \___|      \___/|___/
+```
 
-Personal productivity system for Claude Code. GTD weekly reviews, energy-adaptive daily planning, and quarterly goal tracking — works with your favorite tools or in chat-only mode.
+A Claude Code plugin for personal productivity.
+
+GTD weekly reviews, energy-adaptive daily planning, and quarterly goal tracking. Works with your favorite tools (Notion, Google Calendar, Gmail) or in chat-only mode. Connect what you have, skip what you don't.
 
 ## Install
 
@@ -8,24 +16,48 @@ Personal productivity system for Claude Code. GTD weekly reviews, energy-adaptiv
 /install-plugin glodyfimpa/life-os
 ```
 
-## Getting Started
-
 After installing, run the setup wizard:
 
 ```
 /setup
 ```
 
-The wizard walks you through:
-1. Choosing your tools (task database, calendar, email — or none)
-2. Connecting and validating each tool
-3. Choosing your language (English, Italian, or any language)
-4. Defining your work schedule, commitments, and meetings
-5. Configuring sprint cycles (optional)
+Setup takes about 5 minutes: choose your tools, connect and validate them, pick a language, define your schedule. It generates a config file at `.claude/life-os.local.md`. Add `*.local.md` to your `.gitignore` to keep personal data out of version control.
 
-Setup takes about 5 minutes and generates a personal config file at `.claude/life-os.local.md`. Add `*.local.md` to your `.gitignore` to keep personal data out of version control.
+## Update
 
-## Tool Selection
+```
+/plugin marketplace update life-os
+```
+
+To receive updates automatically:
+
+1. Run `/plugin`
+2. Go to the **Marketplaces** tab
+3. Select `life-os`
+4. Select **Enable auto-update**
+
+### Team setup
+
+Pre-enable the plugin in `.claude/settings.json`:
+
+```json
+{
+  "enabledPlugins": {
+    "life-os@life-os": true
+  },
+  "extraKnownMarketplaces": {
+    "life-os": {
+      "source": {
+        "source": "github",
+        "repo": "glodyfimpa/life-os"
+      }
+    }
+  }
+}
+```
+
+## Prerequisites
 
 life-os works in three modes depending on which tools you connect:
 
@@ -45,8 +77,8 @@ Supported tools (any tool with an MCP server works):
 
 ## Commands
 
-| Command | What it does |
-|---------|-------------|
+| Command | Does |
+|---------|------|
 | `/setup` | Full configuration wizard (first time or reconfigure everything) |
 | `/change-language` | Change language and trigger phrases |
 | `/update-schedule` | Update work hours, commitments, meetings, or sprint cycle |
@@ -89,39 +121,42 @@ If you choose Notion as your task database, life-os works best with this structu
 
 **Resources database:** Status (select: Inbox, To Review, Reviewed), Projects (relation)
 
-## File tree
+## Structure
 
 ```
-life-os/
-  .claude-plugin/
-    plugin.json
-  commands/
-    setup.md              # Configuration wizard
-    change-language.md    # Language + trigger update
-    update-schedule.md    # Schedule/meetings update
-    weekly-review.md      # /weekly-review [phase]
-    morning-plan.md       # /morning-plan [energy-level]
-    evening-close.md      # /evening-close
-  skills/
-    planning-review-system/
-      SKILL.md            # 6-phase weekly review workflow
-      references/
-        weekly-template.md   # Page template for review output
-    time-energy-manager/
-      SKILL.md            # 4-phase daily management workflow
-      references/
-        energy-patterns.md   # Pattern detection guide for energy data
-  scripts/
-    sync-skills.sh          # Sync skills from claude-skills repo
-  CONNECTORS.md
-  README.md
+life-os/                                             the plugin
+├── .claude-plugin/
+│   └── plugin.json                                  plugin manifest
+├── commands/
+│   ├── setup.md                                     configuration wizard
+│   ├── change-language.md                           language + trigger update
+│   ├── update-schedule.md                           schedule/meetings update
+│   ├── weekly-review.md                             /weekly-review [phase]
+│   ├── morning-plan.md                              /morning-plan [energy-level]
+│   └── evening-close.md                             /evening-close
+├── skills/
+│   ├── planning-review-system/
+│   │   ├── SKILL.md                                 6-phase weekly review workflow
+│   │   └── references/
+│   │       └── weekly-template.md                   page template for review output
+│   └── time-energy-manager/
+│       ├── SKILL.md                                 4-phase daily management workflow
+│       └── references/
+│           └── energy-patterns.md                   pattern detection guide for energy data
+├── scripts/
+│   └── sync-skills.sh                               sync skills from claude-skills repo
+├── CONNECTORS.md                                    tool-agnostic connector docs
+└── README.md
 ```
 
 User config (generated by `/setup`, not in the plugin):
+
 ```
 .claude/
-  life-os.local.md    # Personal config: tool connections, schedule, triggers, ideal week
+  life-os.local.md                                   personal config: tools, schedule, triggers
 ```
+
+6 commands, 2 skills, 1 sync script, 2 reference files. No hooks, no agents.
 
 ## Development
 
