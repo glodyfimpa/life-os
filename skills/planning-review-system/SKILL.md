@@ -10,21 +10,35 @@ Weekly review workflow (30 min) with GTD-based inbox processing and quarterly tr
 
 ## Config Guard
 
-**BEFORE ANYTHING ELSE:** Check if `.claude/life-os.local.md` exists in the current project directory. If not, tell the user:
-> "life-os is not configured yet. Run `/setup` first to connect your tools and set your preferences."
-Stop execution.
+**BEFORE ANYTHING ELSE:** Check if `.claude/life-os.local.md` exists in the current project directory.
 
-If it exists, read the file and parse:
-- **Frontmatter (YAML):** connected tools (`task_tool`, `notes_tool`, `email_tool`), database IDs, field mappings, language
-- **Body (Markdown):** triggers, commitments, meetings, ideal week
+**If it exists** (plugin mode or previously configured standalone):
+- Read the file and parse:
+  - **Frontmatter (YAML):** connected tools (`task_tool`, `notes_tool`, `email_tool`), database IDs, field mappings, language
+  - **Body (Markdown):** triggers, commitments, meetings, ideal week
+- Read `task_tool` and `notes_tool` from config. These determine whether to use MCP tools or conversational fallbacks.
 
-Read `task_tool` and `notes_tool` from config. These determine whether to use MCP tools or conversational fallbacks.
+**If it does NOT exist** (first run — run mini-setup):
+1. **Auto-detect** available MCP tools in the current session:
+   - Notion tools available (notion-search, notion-fetch, etc.)? → propose `task_tool = notion`, `notes_tool = notion`
+   - Gmail tools available (gmail_search_messages, etc.)? → propose `email_tool = gmail`
+2. **Present findings** to the user:
+   - If tools detected: "I detected [tools]. I'll ask a few questions to configure this skill."
+   - If no tools detected: "No MCP tools detected. I'll ask you what tools you use so we can set everything up."
+3. **Mini-setup** (always runs, adapts to what's available):
+   - Ask language preference
+   - Ask/confirm which tools the user wants to connect (auto-detected ones are pre-selected, user can add/remove)
+   - For each confirmed tool, ask specifics:
+     - Task DB (Notion/Airtable/Linear): database IDs (`tasks_db`, `projects_db`, `resources_db`), field mappings (`task_status_field`, `project_status_field`, etc.), output page URL
+     - Email: no extra config needed
+   - If user has NO tools and no info to provide: set all tool values to `none`, save minimal config (language only) → skill works in chat-only mode
+4. **Save** everything to `.claude/life-os.local.md` and proceed.
 
 All instructions below reference config values. Never use hardcoded database IDs or field names.
 
 ## Language
 
-Respond in the language specified by the `language` field in the config. Format dates according to that language's conventions.
+Respond in the language specified by the `language` field in the config. If no config exists yet (during mini-setup), detect language from the user's message. Format dates according to the configured language's conventions.
 
 ## Database Filters (CRITICAL)
 
@@ -124,7 +138,7 @@ Apply the Golden Rule — ask user:
 
 **Title:** `Weekly Review — [date in configured language]`
 
-**Content:** See `${CLAUDE_PLUGIN_ROOT}/skills/planning-review-system/references/weekly-template.md`
+**Content:** See `references/weekly-template.md` in this skill's directory
 
 ## Trigger Mapping
 

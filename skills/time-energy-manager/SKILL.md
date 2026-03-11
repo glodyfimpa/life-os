@@ -12,21 +12,40 @@ Daily time and energy management system in 4 phases. Operational complement to t
 
 ## Config Guard
 
-**BEFORE ANYTHING ELSE:** Check if `.claude/life-os.local.md` exists in the current project directory. If not, tell the user:
-> "life-os is not configured yet. Run `/setup` first to connect your tools and set your preferences."
-Stop execution.
+**BEFORE ANYTHING ELSE:** Check if `.claude/life-os.local.md` exists in the current project directory.
 
-If it exists, read the file and parse:
-- **Frontmatter (YAML):** connected tools, database IDs, field mappings, language, schedule settings
-- **Body (Markdown):** triggers, fixed commitments, recurring meetings, ideal week
+**If it exists** (plugin mode or previously configured standalone):
+- Read the file and parse:
+  - **Frontmatter (YAML):** connected tools, database IDs, field mappings, language, schedule settings
+  - **Body (Markdown):** triggers, fixed commitments, recurring meetings, ideal week
+- Read `task_tool`, `calendar_tool`, and `notes_tool` from config. These determine whether to use MCP tools or conversational fallbacks.
 
-Read `task_tool`, `calendar_tool`, and `notes_tool` from config. These determine whether to use MCP tools or conversational fallbacks.
+**If it does NOT exist** (first run — run mini-setup):
+1. **Auto-detect** available MCP tools in the current session:
+   - Notion tools available (notion-search, notion-fetch, etc.)? → propose `task_tool = notion`, `notes_tool = notion`
+   - Google Calendar tools available (gcal_list_events, etc.)? → propose `calendar_tool = google-calendar`
+   - Gmail tools available (gmail_search_messages, etc.)? → propose `email_tool = gmail`
+2. **Present findings** to the user:
+   - If tools detected: "I detected [tools]. I'll ask a few questions to configure this skill."
+   - If no tools detected: "No MCP tools detected. I'll ask you what tools you use so we can set everything up."
+3. **Mini-setup** (always runs, adapts to what's available):
+   - Ask language preference
+   - Ask/confirm which tools the user wants to connect (auto-detected ones are pre-selected, user can add/remove)
+   - For each confirmed tool, ask specifics:
+     - Task DB (Notion/Airtable/Linear): database IDs (`tasks_db`, `projects_db`), field mappings, output page URL
+     - Calendar: calendar ID
+     - Notes: output page URL (if different from task tool)
+   - Ask about work schedule: work days, work hours, lunch break
+   - Ask about fixed commitments that block the evening (gym, family, etc.)
+   - Ask about ideal week structure (or offer to generate one from the schedule info)
+   - If user has NO tools and no info to provide: set all tool values to `none`, save minimal config (language only) → skill works in chat-only mode
+4. **Save** everything to `.claude/life-os.local.md` and proceed.
 
 All instructions below reference config values. Never use hardcoded database IDs, field names, or schedule times.
 
 ## Language
 
-Respond in the language specified by the `language` field in the config. Format dates according to that language's conventions.
+Respond in the language specified by the `language` field in the config. If no config exists yet (during mini-setup), detect language from the user's message. Format dates according to the configured language's conventions.
 
 ## Database References
 
@@ -310,7 +329,7 @@ Read triggers from the "Trigger Mapping" section in config body. Match user mess
 |-------------|--------|
 | "ideal week" / "show me the week" | Show the ideal week template from config body for the current day |
 | "what week is it?" / "sprint A or B?" | Calculate ISO week from date, apply configured parity |
-| "energy patterns" / "trend" | Analysis from `${CLAUDE_PLUGIN_ROOT}/skills/time-energy-manager/references/energy-patterns.md` using Plan pages from the last 2+ weeks |
+| "energy patterns" / "trend" | Analysis from `references/energy-patterns.md` in this skill's directory, using Plan pages from the last 2+ weeks |
 | "customize schedule" / "update my week" | Direct the user to run `/update-schedule` |
 
 ## Dependencies
