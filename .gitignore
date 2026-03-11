@@ -8,6 +8,9 @@
 .claude/worktrees/
 .claude/todos/
 
+# Claude Code project instructions (personal per machine)
+CLAUDE.md
+
 # OS files
 .DS_Store
 Thumbs.db
