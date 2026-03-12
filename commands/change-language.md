@@ -9,15 +9,19 @@ Updates the language setting and trigger phrases in your life-os config.
 
 ## Prerequisites
 
-Check if `.claude/life-os.local.md` exists. If not:
-> "life-os is not configured yet. Run `/setup` first."
+Look for the config file in this order:
+1. `.claude/life-os.local.md` (project-level)
+2. `~/.claude/life-os.local.md` (global, portable across projects)
+
+Use the first one found. If neither exists:
+> "life-os is not configured yet. Run `/setup` first, or copy your `life-os.local.md` to `~/.claude/` for global access."
 Stop.
 
 ## Steps
 
 ### Step 1: Read current config
 
-Read `.claude/life-os.local.md`. Extract the current `language` value from frontmatter and the current triggers from the "Trigger Mapping" section in the body.
+Read the config file found above. Extract the current `language` value from frontmatter and the current triggers from the "Trigger Mapping" section in the body.
 
 Tell the user:
 > "Current language: [language]. Current triggers:

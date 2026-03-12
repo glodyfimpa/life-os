@@ -5,10 +5,21 @@ allowed-tools: ["Read", "Write", "Edit", "Bash", "AskUserQuestion", "Glob"]
 
 # life-os Setup Wizard
 
-Interactive configuration wizard. Creates `.claude/life-os.local.md` with all settings needed for the plugin to work.
+Interactive configuration wizard. Creates the config file with all settings needed for the plugin to work.
 
-**If `.claude/life-os.local.md` already exists**, warn the user:
-> "life-os is already configured. Running setup again will overwrite your current config. Continue?"
+**Config location:** The config file can live in two places:
+1. `.claude/life-os.local.md` — project-level (only works in this project)
+2. `~/.claude/life-os.local.md` — global (works in every project, portable)
+
+At the end of setup, ask the user where to save:
+> "Where should I save your config?
+> 1. **Global** (recommended) — `~/.claude/life-os.local.md` — works in every project
+> 2. **This project only** — `.claude/life-os.local.md` — only works here"
+
+Default: global.
+
+**If a config already exists** (check both locations), warn the user:
+> "life-os is already configured at [path]. Running setup again will overwrite your current config. Continue?"
 
 If they decline, stop. If they confirm, proceed.
 
@@ -375,7 +386,7 @@ Use this format for each day:]
 
 ### Write the file
 
-Use the Write tool to create `.claude/life-os.local.md` in the current project directory.
+Use the Write tool to create the config at the location chosen by the user (default: `~/.claude/life-os.local.md` for global access).
 
 ### Break rules embedded in ideal week
 
@@ -389,10 +400,11 @@ When generating the ideal week, ALWAYS apply these break rules:
 ### Final confirmation
 
 Tell the user:
-> "Setup complete! Your config is saved at `.claude/life-os.local.md`.
+> "Setup complete! Your config is saved at [chosen path].
 >
 > **Mode:** [Full integration / Partial / Chat-only] with [list connected tools or "no external tools"]
 >
-> Remember to add `.claude/*.local.md` to your `.gitignore` to keep your personal data out of version control.
+> [If project-level: "Remember to add `.claude/*.local.md` to your `.gitignore` to keep personal data out of version control."]
+> [If global: "Your config is portable — it works in every project where the life-os plugin is installed."]
 >
 > Try `/morning-plan` to test your setup!"
