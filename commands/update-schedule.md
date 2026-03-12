@@ -9,15 +9,19 @@ Modifies schedule-related sections of your life-os config and regenerates the id
 
 ## Prerequisites
 
-Check if `.claude/life-os.local.md` exists. If not:
-> "life-os is not configured yet. Run `/setup` first."
+Look for the config file in this order:
+1. `.claude/life-os.local.md` (project-level)
+2. `~/.claude/life-os.local.md` (global, portable across projects)
+
+Use the first one found. If neither exists:
+> "life-os is not configured yet. Run `/setup` first, or copy your `life-os.local.md` to `~/.claude/` for global access."
 Stop.
 
 ## Steps
 
 ### Step 1: Read current config
 
-Read `.claude/life-os.local.md`. Extract and summarize the current schedule:
+Read the config file found above. Extract and summarize the current schedule:
 
 > "Here's your current setup:
 >

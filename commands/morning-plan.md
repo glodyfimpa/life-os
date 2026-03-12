@@ -5,8 +5,12 @@ argument-hint: [energy-level]
 
 Run the Time & Energy Manager Morning Plan (Phase 1).
 
-**First:** Check if `.claude/life-os.local.md` exists. If not, tell the user:
-> "life-os is not configured yet. Run `/setup` first."
+**First:** Look for the config file in this order:
+1. `.claude/life-os.local.md` (project-level)
+2. `~/.claude/life-os.local.md` (global, portable across projects)
+
+Use the first one found. If neither exists, tell the user:
+> "life-os is not configured yet. Run `/setup` first, or copy your `life-os.local.md` to `~/.claude/` for global access."
 Stop.
 
 Load the time-energy-manager skill from this plugin. Execute the full Morning Plan workflow.
