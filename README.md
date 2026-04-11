@@ -12,9 +12,30 @@ GTD weekly reviews, energy-adaptive daily planning, and quarterly goal tracking.
 
 ## Install
 
+Inside a Claude Code session:
+
 ```
-/install-plugin glodyfimpa/life-os
+/plugin marketplace add glodyfimpa/life-os
+/plugin install life-os@life-os
 ```
+
+Or from the terminal:
+
+```bash
+claude plugin marketplace add glodyfimpa/life-os
+claude plugin install life-os@life-os
+```
+
+Or interactively inside Claude Code:
+
+```
+/plugin marketplace add glodyfimpa/life-os
+/plugin
+```
+
+Then go to the **Discover** tab, select `life-os`, and choose a scope (user, project, or local).
+
+Verify with `/plugin list` (or `claude plugin list`). You should see `life-os@life-os — Status: ✔ enabled`. Restart Claude Code after installing so the new slash commands are registered.
 
 After installing, run the setup wizard:
 
