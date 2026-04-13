@@ -1,0 +1,17 @@
+{
+  "name": "life-os",
+  "owner": {
+    "name": "Glody Fimpa",
+    "url": "https://github.com/glodyfimpa"
+  },
+  "plugins": [
+    {
+      "name": "life-os",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/glodyfimpa/life-os.git"
+      },
+      "description": "Personal productivity plugin for Claude Code: GTD weekly reviews, energy-adaptive daily planning, and quarterly goal tracking. Works with Notion, Google Calendar, Gmail, or in chat-only mode."
+    }
+  ]
+}
