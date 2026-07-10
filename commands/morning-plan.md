@@ -24,4 +24,4 @@ Parse arguments:
 - Step 3: Generate adaptive plan (integrating email actions if any were accepted)
 - Step 4: User confirmation
 - Step 4.5: Calendar export offer (if `calendar_tool != none`)
-- Step 5: Save plan to notes tool (or present in chat if `notes_tool = none`)
+- Step 5: Save plan according to `notes_tool` config value — Notion page, vault filesystem (see "Vault Filesystem Mode" section in the skill), or chat fallback if `none`

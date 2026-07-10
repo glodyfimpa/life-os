@@ -23,3 +23,8 @@ Parse arguments:
   - No argument → Full workflow (Phases 1-6)
 
 Before starting, read connected tools from config. Available tools determine which operations use MCP and which use conversational fallbacks. If email tool is connected, include email scanning in Phase 1.
+
+For Phase 6 (Summary), the destination depends on `notes_tool`:
+- `notion` → Notion page under `output_page_url`
+- `vault_filesystem` → Obsidian vault file (see "Vault Filesystem Mode" section in the skill)
+- `none` → chat fallback

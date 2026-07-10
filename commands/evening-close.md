@@ -20,4 +20,4 @@ Steps:
 3. Get final energy rating
 4. Deliver the verdict (always oriented toward permission to disconnect)
 5. Capture note for tomorrow (optional)
-6. Save evening close to notes tool (or present in chat)
+6. Save evening close according to `notes_tool` config value — Notion page, vault filesystem (see "Vault Filesystem Mode" section in the skill), or chat fallback if `none`
