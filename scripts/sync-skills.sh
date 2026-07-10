@@ -22,6 +22,7 @@ SOURCE="$(cd "$SOURCE" 2>/dev/null && pwd)" || {
 SKILLS=(
   "planning-review-system"
   "time-energy-manager"
+  "weekly-planner"
 )
 
 echo "Source: $SOURCE"
@@ -37,6 +38,8 @@ for skill in "${SKILLS[@]}"; do
     continue
   fi
 
+  mkdir -p "$dst"
+
   # Sync SKILL.md
   if [ -f "$src/SKILL.md" ]; then
     cp "$src/SKILL.md" "$dst/SKILL.md"
@@ -50,6 +53,14 @@ for skill in "${SKILLS[@]}"; do
     echo "  $skill/references/*"
   fi
 done
+
+# Sync _shared-refs/ (cited by multiple skills — must land at skills/_shared-refs/
+# so that a skill at skills/<name>/ resolves ../_shared-refs/ correctly)
+if [ -d "$SOURCE/_shared-refs" ]; then
+  mkdir -p "$PLUGIN_DIR/skills/_shared-refs"
+  cp "$SOURCE/_shared-refs/"* "$PLUGIN_DIR/skills/_shared-refs/"
+  echo "  _shared-refs/*"
+fi
 
 echo ""
 echo "Sync complete. Changes:"
