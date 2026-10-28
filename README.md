@@ -196,4 +196,4 @@ The sync script copies `SKILL.md` and `references/*` for each skill.
 
 ## License
 
-MIT
+MIT, see [LICENSE](LICENSE).
